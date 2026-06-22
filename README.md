@@ -23,11 +23,11 @@ A Google Maps–style traffic routing demo built on real Indian city coordinates
 
 ```
 cityflow/
-├── index.html       # Markup + all UI controls
+├── index.html       
 ├── css/
-│   └── style.css    # CSS-variable dark/light theme + all components
+│   └── style.css    
 ├── js/
-│   └── app.js       # Graph data, Dijkstra, Yen's, geolocation, theme, simulation
+│   └── app.js       
 └── README.md
 ```
 
