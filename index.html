@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Traffic Navigation · Hyderabad, India</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ======= TOPBAR ======= -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-name">Smart Traffic<span> Navigation System </span></div>
+      <div class="brand-sub">Live Traffic · Dijkstra Engine · India</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn" id="btnTheme" style="width:auto;padding:6px 13px;font-size:12px;margin-bottom:0">☀️ Light mode</button>
+      <div class="live-pill" id="livePill">
+        <span class="live-dot" id="liveDot"></span>
+        <span id="liveText">SIM OFF</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- ======= SIDEBAR ======= -->
+    <aside class="sidebar">
+
+      <!-- MAP AREA -->
+      <div class="sec">
+        <div class="sec-title">Map area</div>
+        <div class="field">
+          <label class="lbl" for="selDataset">Choose region</label>
+          <select id="selDataset">
+            <option value="hyderabad">🏙️ Hyderabad — city roads</option>
+            <option value="regional">🗺️ Telangana &amp; neighbouring states</option>
+          </select>
+        </div>
+        <button class="btn locate-btn" id="btnLocate">📍 Detect my location</button>
+        <div class="hint">Location detection finds the nearest mapped place to you across <strong>both maps</strong> and switches the map automatically.</div>
+      </div>
+
+      <!-- ROUTE -->
+      <div class="sec">
+        <div class="sec-title">Route</div>
+        <div class="field">
+          <label class="lbl" for="selStart">Start point</label>
+          <select id="selStart"></select>
+        </div>
+        <div class="field">
+          <label class="lbl" for="selEnd">Destination</label>
+          <select id="selEnd"></select>
+        </div>
+
+        <!-- Route optimisation mode -->
+        <div class="field">
+          <label class="lbl">Optimise for</label>
+          <div class="btn-row">
+            <button class="btn mode-btn active" id="btnFastest">⚡ Fastest</button>
+            <button class="btn mode-btn" id="btnShortest">🔵 Shortest distance</button>
+          </div>
+        </div>
+
+        <button class="btn primary" id="btnFind">Find route</button>
+        <button class="btn" id="btnAlts">Show alternate routes</button>
+        <div class="hint">Click a city on the map to set start, click another to set destination. <strong>Fastest</strong> mode respects live traffic weights; <strong>Shortest</strong> ignores traffic and picks minimum km.</div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="sec" id="resultsWrap" style="display:none">
+        <div class="sec-title">Route results</div>
+        <div id="resultsBox"></div>
+      </div>
+
+      <!-- LIVE TRAFFIC -->
+      <div class="sec">
+        <div class="sec-title">Live traffic</div>
+        <button class="btn" id="btnSim">▶ Start live simulation</button>
+        <div class="hint">Click any road on the map to manually cycle its congestion level — route recalculates instantly.</div>
+      </div>
+
+      <!-- BUILD THE MAP -->
+      <div class="sec">
+        <div class="sec-title">Build the map</div>
+        <button class="btn" id="btnAddCity">+ Add place (double-click map)</button>
+        <button class="btn" id="btnConnect">⇄ Connect two places</button>
+        <button class="btn" id="btnReset">↺ Reset to default</button>
+      </div>
+
+      <!-- LEGEND -->
+      <div class="sec">
+        <div class="sec-title">Legend</div>
+        <div class="legend">
+          <div class="legend-row"><span class="swatch" style="background:var(--t1)"></span><span class="lx">Free flow</span><span class="mult">×1.0</span></div>
+          <div class="legend-row"><span class="swatch" style="background:var(--t2)"></span><span class="lx">Moderate</span><span class="mult">×1.4</span></div>
+          <div class="legend-row"><span class="swatch" style="background:var(--t3)"></span><span class="lx">Heavy</span><span class="mult">×2.0</span></div>
+          <div class="legend-row"><span class="swatch" style="background:var(--t4)"></span><span class="lx">Jam</span><span class="mult">×3.0</span></div>
+          <div class="legend-row" style="margin-top:6px"><span class="swatch" style="background:var(--accent)"></span><span class="lx">Best route</span></div>
+          <div class="legend-row"><span class="swatch" style="background:var(--alt1)"></span><span class="lx">Alternate 1</span></div>
+          <div class="legend-row"><span class="swatch" style="background:var(--alt2)"></span><span class="lx">Alternate 2</span></div>
+        </div>
+      </div>
+
+      <!-- HOW IT WORKS -->
+      <div class="sec">
+        <details class="info-box">
+          <summary>How the engine works</summary>
+          <div class="info-body">
+            <p><strong>Weighted graph.</strong> Every road is an edge whose cost = distance × live traffic multiplier (1.0–3.0). Cities are nodes.</p>
+            <p><strong>Dijkstra's algorithm</strong> expands the lowest-cost unvisited node first, guaranteeing the optimal path.</p>
+            <p><strong>Fastest vs Shortest.</strong> Fastest minimises traffic-weighted cost. Shortest minimises raw km — it may be slower but uses less fuel.</p>
+            <p><strong>Alternate routes</strong> use a simplified Yen's k-shortest-paths algorithm — it blocks edges from found paths segment by segment and re-runs Dijkstra.</p>
+            <p><strong>ETA</strong> is always computed from actual traffic-weighted time so you can compare across modes.</p>
+          </div>
+        </details>
+      </div>
+
+    </aside><!-- /sidebar -->
+
+    <!-- ======= MAP ======= -->
+    <main class="mapwrap">
+      <svg id="mapSvg" viewBox="0 0 1000 640" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M40 0L0 0 0 40" fill="none" stroke="var(--line)" stroke-width="0.8" opacity=".5"/>
+          </pattern>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect width="1000" height="640" fill="url(#grid)"/>
+        <g id="layerEdges"></g>
+        <g id="layerRoute"></g>
+        <g id="layerNodes"></g>
+      </svg>
+      <div class="map-toast" id="toast"></div>
+      <div class="map-badge" id="mapBadge">Loading…</div>
+    </main>
+
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- ======= MODAL: Add City ======= -->
+<div class="overlay" id="modalCity">
+  <div class="modal">
+    <h3>Name this place</h3>
+    <div class="field">
+      <label class="lbl" for="inpCityName">Place / intersection name</label>
+      <input type="text" id="inpCityName" maxlength="28" placeholder="e.g. Trimulgherry">
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="btnCityX">Cancel</button>
+      <button class="btn primary" id="btnCityOk">Add place</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= MODAL: Add Road ======= -->
+<div class="overlay" id="modalRoad">
+  <div class="modal">
+    <h3 id="lblRoadTitle">New road</h3>
+    <div class="field">
+      <label class="lbl" for="inpRoadDist">Distance (km)</label>
+      <input type="number" id="inpRoadDist" min="1" max="800" step="0.5" value="10">
+    </div>
+    <div class="field">
+      <label class="lbl" for="selRoadTrf">Traffic level</label>
+      <select id="selRoadTrf">
+        <option value="1">Free flow</option>
+        <option value="2" selected>Moderate</option>
+        <option value="3">Heavy</option>
+        <option value="4">Jam</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="btnRoadX">Cancel</button>
+      <button class="btn primary" id="btnRoadOk">Add road</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
