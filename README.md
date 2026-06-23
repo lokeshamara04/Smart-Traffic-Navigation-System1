@@ -1,4 +1,4 @@
-# CityFlow — Smart Traffic Navigation System
+# Smart Traffic Navigation System
 
 A Google Maps–style traffic routing demo built on real Indian city coordinates. Uses **Dijkstra's algorithm** + **Yen's k-shortest-paths** on a live weighted graph, with dark/light mode, geolocation detection, two map datasets (Hyderabad city roads + Telangana/regional highways), and a live traffic simulation.
 
